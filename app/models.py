@@ -7,9 +7,11 @@ from app import db
 
 class Usuario(db.Model):
     __tablename__ = 'usuarios'
+
     id: so.Mapped[int] = so.mapped_column(primary_key = True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index = True, unique = True)
     senha: so.Mapped[str] = so.mapped_column(sa.String(128))
+
     posts: so.WriteOnlyMapped['Postagem'] = so.relationship(
         back_populates = 'autor', passive_deletes = True
     )
@@ -18,21 +20,21 @@ class Usuario(db.Model):
     def to_dict(self) -> dict:
         query = db.select(Postagem)
         user_posts = db.session.scalars(query.where(Postagem.autor == self))
+
         return {
             "id": self.id,
             "username": self.username,
-            "posts": [
-                post.to_dict() for post in user_posts
-            ]
+            "posts": [post.to_dict() for post in user_posts]
         }
 
 
     def __repr__(self) -> str:
-        return f'<User -> {self.username}>'
+        return f'<User {self.username}>'
 
 
 class Postagem(db.Model):
     __tablename__ = 'postagens'
+
     id: so.Mapped[int] = so.mapped_column(primary_key = True)
     autor: so.Mapped[Usuario] = so.relationship(
         back_populates = 'posts'
@@ -45,12 +47,12 @@ class Postagem(db.Model):
     def to_dict(self) -> dict:
         return {
             "id": self.id,
-            "autor": self.autor.username,
-            "postagem": self.postagem
+            "postagem": self.postagem,
+            "autor": self.autor.username
         }
 
 
     def __repr__(self) -> str:
-        return f'<Post -> {self.postagem}>'
+        return f'<Postagem {self.postagem}>'
 
 
