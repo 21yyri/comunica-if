@@ -44,19 +44,44 @@ def registrar_user():
 
 
 @app.route('/usuarios/deletar', methods=["DELETE"])
+def del_user_por_nome():
+    dados = request.get_json()
+    if not dados:
+        return jsonify({"Erro": "dados vazios."}), 400
+
+    username, senha = dados["username"], dados["senha"]
+
+    query = db.select(Usuario).where(Usuario.username == username)
+    usuario = db.session.scalars(query).one_or_none()
+
+    if not usuario:
+        return jsonify({"Erro": "usuario nao encontrado."}), 404
+        
+    if usuario.senha != senha:
+        return jsonify({"Erro": "senha incorreta."}), 400
+        
+    db.session.delete(usuario)
+    db.session.commit()
+    
+    return jsonify({"sucesso": "usuario deletado"}), 200
+
+
+@app.route('/usuarios/deletar/todos', methods=["DELETE"])
 # FUNCAO DE DEBUG
 def deletar_todos_usuarios():
     usuarios: list[Usuario] = db.session.scalars(db.select(Usuario)).all()
     query = db.select(Postagem)
 
     for usuario in usuarios:
-        postagens_usuario: list[Postagem] = db.session.scalars(query.where(Postagem.autor == usuario)).all()
+        postagens_usuario: list[Postagem] = db.session.scalars(
+            query.where(Postagem.autor == usuario)).all()
         for post in postagens_usuario:
             db.session.delete(post)
         db.session.delete(usuario)
     db.session.commit()
 
     return jsonify({"Sucesso": "usuarios deletados."}), 200
+
          
 
 
