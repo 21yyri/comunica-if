@@ -3,19 +3,19 @@ import sqlalchemy.orm as so
 from datetime import datetime, timezone
 from app import db
 
-# to do: hashing das senhas
 
 class Usuario(db.Model):
     __tablename__ = 'usuarios'
 
-    id: so.Mapped[int] = so.mapped_column(primary_key = True)
-    username: so.Mapped[str] = so.mapped_column(sa.String(64), index = True, unique = True)
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    username: so.Mapped[str] = so.mapped_column(
+        sa.String(64), index=True, unique=True
+    )
     senha: so.Mapped[str] = so.mapped_column(sa.String(128))
 
     posts: so.WriteOnlyMapped['Postagem'] = so.relationship(
-        back_populates = 'autor', passive_deletes = True
+        back_populates='autor', passive_deletes=True
     )
-
 
     def to_dict(self) -> dict:
         query = db.select(Postagem)
@@ -27,7 +27,6 @@ class Usuario(db.Model):
             "posts": [post.to_dict() for post in user_posts]
         }
 
-
     def __repr__(self) -> str:
         return f'<User {self.username}>'
 
@@ -35,14 +34,15 @@ class Usuario(db.Model):
 class Postagem(db.Model):
     __tablename__ = 'postagens'
 
-    id: so.Mapped[int] = so.mapped_column(primary_key = True)
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
     autor: so.Mapped[Usuario] = so.relationship(
-        back_populates = 'posts'
+        back_populates='posts'
     )
-    autor_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Usuario.id), index = True)
-    postagem: so.Mapped[str] = so.mapped_column(sa.String(324), index = True)
-    data: so.Mapped[datetime] = so.mapped_column(index = True, default = lambda: datetime.now(timezone.utc))
-
+    autor_id: so.Mapped[int] = so.mapped_column(
+        sa.ForeignKey(Usuario.id), index=True)
+    postagem: so.Mapped[str] = so.mapped_column(sa.String(324), index=True)
+    data: so.Mapped[datetime] = so.mapped_column(
+        index=True, default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> dict:
         return {
@@ -51,8 +51,5 @@ class Postagem(db.Model):
             "autor": self.autor.username
         }
 
-
     def __repr__(self) -> str:
         return f'<Postagem {self.postagem}>'
-
-
