@@ -1,10 +1,24 @@
 import sqlalchemy as sa
 import sqlalchemy.orm as so
+from flask_login import UserMixin
+from hashlib import sha256
 from datetime import datetime, timezone
-from app import db
+from app import db, login
 
 
-class Usuario(db.Model):
+def hash_senha(senha: str):
+    hash = sha256()
+    hash.update(senha.encode())
+    hash.hexdigest()
+    return hash
+
+
+@login.user_loader
+def load_user(id):
+    return db.session.get(Usuario, int(id))
+
+
+class Usuario(UserMixin, db.Model):
     __tablename__ = 'usuarios'
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -16,6 +30,12 @@ class Usuario(db.Model):
     posts: so.WriteOnlyMapped['Postagem'] = so.relationship(
         back_populates='autor', passive_deletes=True
     )
+
+    def check_senha(self, senha):
+        hash = hash_senha(senha)
+        if senha == hash:
+            return True
+        return False
 
     def to_dict(self) -> dict:
         query = db.select(Postagem)

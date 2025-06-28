@@ -1,14 +1,7 @@
 from app import app, db
 from flask import jsonify, request
 from datetime import datetime
-from hashlib import sha256
 from app.models import *
-
-
-def hash(senha):
-    hasher = sha256()
-    hasher.update(senha.encode())
-    return hasher.hexdigest()
 
 
 @app.route('/usuarios')
@@ -25,7 +18,6 @@ def usuario_por_username(username):
 
     if not resultado:
         return jsonify({"Erro": "usuario nao encontrado."}), 404
-
     return jsonify(resultado.to_dict()), 200
 
 
@@ -40,13 +32,26 @@ def registrar_user():
     if usuario_existe:
         return jsonify({"Erro": "usuario ja existente."}), 403
 
-    senha_hash = hash(dados["senha"])
+    senha_hash = hash_senha(dados["senha"])
 
     db.session.add(Usuario(
         username=dados["username"], senha=senha_hash
     ))
     db.session.commit()
     return jsonify({"Sucesso": "usuario adicionado."}), 201
+
+
+@app.route('/usuario/login')
+def login():
+    credenciais = request.get_json()
+    query = db.select(Usuario).where(
+        Usuario.username == credenciais["username"])
+    usuario = db.session.scalar(query).one_or_none()
+
+    if not usuario or hash_senha(credenciais["senha"]) != usuario.check_senha():
+        return jsonify({"Erro": "usuario ou senha incorretos."}), 404
+    usuario.is_authenticated = True
+    return jsonify({"Sucesso": "user autenticado."}), 200
 
 
 @app.route('/usuarios/deletar', methods=["DELETE"])
@@ -56,7 +61,7 @@ def del_user_por_nome():
         return jsonify({"Erro": "dados vazios."}), 400
 
     username = dados["username"]
-    senha = hash(dados["senha"])
+    senha = hash_senha(dados["senha"])
 
     query = db.select(Usuario).where(Usuario.username ==
                                      username and Usuario.senha == senha)
