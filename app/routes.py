@@ -1,7 +1,14 @@
 from app import app, db
 from flask import jsonify, request
-from datetime import datetime 
+from datetime import datetime
+from hashlib import sha256
 from app.models import *
+
+
+def hash(senha):
+    hasher = sha256()
+    hasher.update(senha.encode())
+    return hasher.hexdigest()
 
 
 @app.route('/usuarios')
@@ -9,7 +16,6 @@ def usuarios():
     query = db.select(Usuario)
     all_users = db.session.scalars(query).all()
     return jsonify([user.to_dict() for user in all_users]), 200
-
 
 
 @app.route('/usuarios/<username>')
@@ -23,24 +29,24 @@ def usuario_por_username(username):
     return jsonify(resultado.to_dict()), 200
 
 
-
 @app.route('/usuarios/registrar', methods=["POST"])
 def registrar_user():
     dados = request.get_json()
     if not dados:
         return jsonify({"Erro": "dados ausentes"}), 400
-    
+
     query = db.select(Usuario).where(Usuario.username == dados["username"])
     usuario_existe = db.session.scalars(query).one_or_none()
     if usuario_existe:
         return jsonify({"Erro": "usuario ja existente."}), 403
-    
+
+    senha_hash = hash(dados["senha"])
+
     db.session.add(Usuario(
-        username = dados["username"], senha = dados["senha"]
+        username=dados["username"], senha=senha_hash
     ))
     db.session.commit()
     return jsonify({"Sucesso": "usuario adicionado."}), 201
-
 
 
 @app.route('/usuarios/deletar', methods=["DELETE"])
@@ -49,20 +55,19 @@ def del_user_por_nome():
     if not dados:
         return jsonify({"Erro": "dados vazios."}), 400
 
-    username, senha = dados["username"], dados["senha"]
+    username = dados["username"]
+    senha = hash(dados["senha"])
 
-    query = db.select(Usuario).where(Usuario.username == username)
+    query = db.select(Usuario).where(Usuario.username ==
+                                     username and Usuario.senha == senha)
     usuario = db.session.scalars(query).one_or_none()
 
-    if not usuario:
-        return jsonify({"Erro": "usuario nao encontrado."}), 404
-        
-    if usuario.senha != senha:
-        return jsonify({"Erro": "senha incorreta."}), 400
-        
+    if not usuario or usuario.senha != senha:
+        return jsonify({"Erro": "usuario nao encontrado ou senha incorreta."}), 404
+
     db.session.delete(usuario)
     db.session.commit()
-    
+
     return jsonify({"sucesso": "usuario deletado"}), 200
 
 
@@ -82,8 +87,6 @@ def deletar_todos_usuarios():
 
     return jsonify({"Sucesso": "usuarios deletados."}), 200
 
-         
-
 
 @app.route('/postagens')
 def postagens():
@@ -91,7 +94,6 @@ def postagens():
     if not postagens:
         return jsonify({"Erro": "nenhum post foi encontrado."}), 404
     return jsonify([post.to_dict() for post in postagens]), 201
-
 
 
 @app.route('/postagens/<username>')
@@ -110,21 +112,21 @@ def postagem_by_username(username: str):
     return jsonify([post.to_dict() for post in posts_do_usuario]), 200
 
 
-
 @app.route('/postagens/postar', methods=['POST'])
 def postar():
     dados: dict[Postagem] = request.get_json()
     if not dados:
         return jsonify({"erro": "dados ausentes"}), 400
 
-    query = db.select(Usuario).where(Usuario.username == dados["autor"]["username"])
+    query = db.select(Usuario).where(
+        Usuario.username == dados["autor"]["username"])
     usuario: Usuario | None = db.session.scalars(query).one_or_none()
 
     if not usuario:
         return jsonify({"Erro": "usuario nao existe"}), 400
- 
+
     post = Postagem(
-        autor = usuario, postagem = dados["postagem"], data = datetime.now()
+        autor=usuario, postagem=dados["postagem"], data=datetime.now()
     )
 
     db.session.add(post)
@@ -133,9 +135,7 @@ def postar():
     return jsonify({"Sucesso": "O envio foi concluido."}), 201
 
 
-
 @app.route('/postagens/deletar', methods=["DELETE"])
-# FUNCAO DE DEBUG
 def apagar_todos__os_posts():
     query = db.select(Postagem)
     all_posts: list[Postagem] = db.session.scalars(query).all()
@@ -146,5 +146,3 @@ def apagar_todos__os_posts():
     db.session.commit()
 
     return jsonify({"Sucesso": "posts deletados"}), 200
-
-
