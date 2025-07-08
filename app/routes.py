@@ -1,7 +1,11 @@
 from app import app, db
 from flask import jsonify, request
+from flask_login import login_user, logout_user
 from datetime import datetime
+import requests
 from app.models import *
+
+api_url = "https://suap.ifrn.edu.br/api"
 
 
 @app.route('/usuarios')
@@ -19,7 +23,6 @@ def usuario_por_username(username):
     if not resultado:
         return jsonify({"Erro": "usuario nao encontrado."}), 404
     return jsonify(resultado.to_dict()), 200
-
 
 @app.route('/usuarios/registrar', methods=["POST"])
 def registrar_user():
@@ -40,18 +43,63 @@ def registrar_user():
     db.session.commit()
     return jsonify({"Sucesso": "usuario adicionado."}), 201
 
+"""
+    O HASH DA SENHA TA RETORNANDO UM OBJETO
+"""
 
-@app.route('/usuario/login')
+
+
+@app.route('/usuario/login', methods=["POST"])
 def login():
     credenciais = request.get_json()
-    query = db.select(Usuario).where(
-        Usuario.username == credenciais["username"])
-    usuario = db.session.scalar(query).one_or_none()
+    dados = {
+        "username": credenciais["matricula"],
+        "password": credenciais["senha"]
+    }
 
-    if not usuario or hash_senha(credenciais["senha"]) != usuario.check_senha():
-        return jsonify({"Erro": "usuario ou senha incorretos."}), 404
-    usuario.is_authenticated = True
-    return jsonify({"Sucesso": "user autenticado."}), 200
+    response = requests.post(api_url + "/token/pair", json=dados)
+    if response.status_code == 200:
+        query = db.select(Usuario).where(Usuario.matricula == dados["username"])
+
+        usuario = db.session.scalars(query).one_or_none()
+        if not usuario:
+            token = response.json()["access"]
+            headers = {
+                "Authorization": f"Bearer {token}"
+            }
+
+            dados_usuario = requests.get(api_url + "/v2/minhas-informacoes/meus-dados/", headers=headers)
+            print(dados_usuario.json())
+            print('oii')
+            if dados_usuario.status_code != 200:
+                return jsonify({"Erro": "matrícula ou senha incorretos."}), 400
+            usuario = Usuario(
+                username = dados_usuario.json()["vinculo"]["nome"],
+                matricula = credenciais["matricula"],
+                senha = hash_senha(dados["password"])
+            )
+            print(hash_senha(dados["password"]))
+            db.session.add(usuario)
+            db.session.commit()
+
+        login_user(usuario, remember=credenciais["remember-me"])
+        return jsonify({"Sucesso": "logado com sucesso."}), 200
+
+
+
+
+
+
+    # query = db.select(Usuario).where(
+    #     Usuario.username == credenciais["username"]
+    # )
+    # usuario: Usuario = db.session.scalar(query).one_or_none()
+
+    # if not usuario or usuario.check_senha(hash_senha(credenciais["senha"])):
+    #     return jsonify({"Erro": "usuario ou senha incorretos."}), 404
+    
+    # login_user(usuario, remember=credenciais["remember-me"])
+    # return jsonify({"Sucesso": "user autenticado."}), 200
 
 
 @app.route('/usuarios/deletar', methods=["DELETE"])
@@ -63,8 +111,7 @@ def del_user_por_nome():
     username = dados["username"]
     senha = hash_senha(dados["senha"])
 
-    query = db.select(Usuario).where(Usuario.username ==
-                                     username and Usuario.senha == senha)
+    query = db.select(Usuario).where(Usuario.username == username and Usuario.senha == senha)
     usuario = db.session.scalars(query).one_or_none()
 
     if not usuario or usuario.senha != senha:

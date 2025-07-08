@@ -22,6 +22,9 @@ class Usuario(UserMixin, db.Model):
     __tablename__ = 'usuarios'
 
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    matricula: so.Mapped[str] = so.mapped_column(
+        sa.String(25), unique=True, index=True
+    )
     username: so.Mapped[str] = so.mapped_column(
         sa.String(64), index=True, unique=True
     )
