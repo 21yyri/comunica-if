@@ -9,8 +9,7 @@ from app import db, login
 def hash_senha(senha: str):
     hash = sha256()
     hash.update(senha.encode())
-    hash.hexdigest()
-    return hash
+    return hash.hexdigest()
 
 
 @login.user_loader
