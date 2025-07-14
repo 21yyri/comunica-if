@@ -8,7 +8,7 @@ from app.models import *
 dotenv.load_dotenv()
 
 api_url = "https://suap.ifrn.edu.br/api"
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+genai.configure(api_key = os.getenv("GEMINI_API_KEY"))
 
 model = genai.GenerativeModel('gemini-2.5-flash')   
 
@@ -17,16 +17,6 @@ def usuarios():
     query = db.select(Usuario)
     all_users = db.session.scalars(query).all()
     return jsonify([user.to_dict() for user in all_users]), 200
-
-
-@app.route('/usuarios/<username>')
-def usuario_por_username(username):
-    query = db.select(Usuario).where(Usuario.username == username)
-    resultado = db.session.scalars(query).one_or_none()
-
-    if not resultado:
-        return jsonify({"Erro": "usuario nao encontrado."}), 404
-    return jsonify(resultado.to_dict()), 200
 
 
 @app.route('/usuarios/login', methods=["POST"])
@@ -70,22 +60,6 @@ def login():
         return jsonify({"Sucesso": "logado com sucesso."}), 200
 
 
-
-
-
-
-    # query = db.select(Usuario).where(
-    #     Usuario.username == credenciais["username"]
-    # )
-    # usuario: Usuario = db.session.scalar(query).one_or_none()
-
-    # if not usuario or usuario.check_senha(hash_senha(credenciais["senha"])):
-    #     return jsonify({"Erro": "usuario ou senha incorretos."}), 404
-    
-    # login_user(usuario, remember=credenciais["remember-me"])
-    # return jsonify({"Sucesso": "user autenticado."}), 200
-
-
 @app.route('/usuarios/deletar', methods=["DELETE"])
 def deletar_todos_usuarios():
     usuarios: list[Usuario] = db.session.scalars(db.select(Usuario)).all()
@@ -125,23 +99,25 @@ def postar():
         return jsonify({"Erro": "usuario nao existe"}), 400
     
     autorizacao = model.generate_content(f"""
-        verifique msg p/ rede social escolar EM: filtre ofensas (pessoais, intolerância, escola, baixo calão) Responda SIM ou NÃO\n\n
-        {dados["postagem"]}
+        verifique msg p/ rede social escolar EM: filtre 
+        ofensas (pessoais, intolerância, escola, calão)
+        Responda SIM ou NÃO \n\n {dados["postagem"]}
     """)
 
-    print(autorizacao.text)
     if autorizacao.text == "SIM":
         post = Postagem(
-            autor=usuario, postagem=dados["postagem"], data=datetime.now()
+            autor = usuario,
+            postagem = dados["postagem"],
+            data = datetime.now()
         )
+
         db.session.add(post)
         db.session.commit()
 
-        return jsonify({"Sucesso": f"O envio foi concluido: gemini disse {autorizacao.text}"}), 201
+        return jsonify({"Sucesso": f"A postagem foi aceita no ambiente escolar: GEMINI -> {autorizacao.text}"}), 201
     
-    return jsonify({"Erro": f"O envio não teve sucesso: {autorizacao.text}"}), 400
+    return jsonify({"Erro": f"A postagem foi tida como imprópria ao ambiente escolar: GEMINI -> {autorizacao.text}"}), 400
     
-
 
 @app.route('/postagens/deletar', methods=["DELETE"])
 def apagar_todos__os_posts():
