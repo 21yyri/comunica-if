@@ -67,7 +67,8 @@ def deletar_todos_usuarios():
 
     for usuario in usuarios:
         postagens_usuario: list[Postagem] = db.session.scalars(
-            query.where(Postagem.autor == usuario)).all()
+            query.where(Postagem.autor == usuario)
+        ).all()
         for post in postagens_usuario:
             db.session.delete(post)
         db.session.delete(usuario)
