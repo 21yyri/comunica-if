@@ -1,6 +1,5 @@
 from app import app, db
 from flask import jsonify, request
-from flask_login import login_user, logout_user
 from datetime import datetime, timedelta
 import requests, os, jwt, dotenv, google.generativeai as genai
 from app.models import *
@@ -23,17 +22,45 @@ def usuarios():
 def login():
     credenciais = request.get_json()
 
-    response = requests.post(api_url + "/token/pair", json=credenciais)
-    if response.status_code == 200:
+    token = requests.post(api_url + "/token/pair", json=credenciais)
+    if token.status_code != 200:
+        return jsonify({"Erro": "matrícula ou senha incorretos."}), 400
+    
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    dados_usuario = requests.get(api_url + "/v2/minhas-informacoes/meus-dados/", headers=headers).json()
+    usuario = Usuario.query.filter_by(
+        Usuario.matricula == credenciais["matricula"] and Usuario.senha == hash_senha(credenciais["senha"])
+    ).one_or_none()
+
+    if not usuario:
+        db.session.add(Usuario(
+            username = dados_usuario["vinculo"]["nome"],
+            matricula = credenciais["username"],
+            senha = hash_senha(credenciais["senha"]),
+        ))
+        db.session.commit()
+    
+
+
+
+
+
+
+
+    if token.status_code == 200:
         query = db.select(Usuario).where(Usuario.matricula == credenciais["username"])
 
         usuario = db.session.scalars(query).one_or_none()
         if not usuario:
-            credenciais.update({
-                "exp": datetime.now() + timedelta(days=7)
+            token.update({
+                "iat": datetime.now().timestamp(),
+                "exp": (datetime.now() + timedelta(days=7)).timestamp()
             })
 
-            token_jwt = jwt.encode(credenciais, os.getenv("SECRET_KEY"), algorithm='HS256')
+            token_jwt = jwt.encode(token, os.getenv("SECRET_KEY"), algorithm='HS256')
 
             headers = {
                 "Authorization": f"Bearer {token_jwt}"
@@ -56,7 +83,6 @@ def login():
             db.session.add(usuario)
             db.session.commit()
 
-        login_user(usuario, remember = True, duration = datetime.now() + timedelta(days=7))
         return jsonify({"Sucesso": "logado com sucesso."}), 200
 
 
