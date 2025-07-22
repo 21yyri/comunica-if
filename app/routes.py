@@ -1,7 +1,8 @@
-from app import app, db
+from app import app, db, jwt
 from flask import jsonify, request
-from datetime import datetime, timedelta
-import requests, os, jwt, dotenv, google.generativeai as genai
+from datetime import datetime
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+import requests, os, dotenv, google.generativeai as genai
 from app.models import *
 
 dotenv.load_dotenv()
@@ -11,14 +12,21 @@ genai.configure(api_key = os.getenv("GEMINI_API_KEY"))
 
 model = genai.GenerativeModel('gemini-2.5-flash')   
 
-@app.route('/usuarios')
+@app.route('/api/usuarios')
+@jwt_required
 def usuarios():
+    matricula = get_jwt_identity()
+    query = db.select(Usuario).where(Usuario.matricula == matricula)
+
+    if not db.session.scalars(query).one_or_none():
+        return jsonify({"Erro": "usuário nâo encontrado."}), 404
+
     query = db.select(Usuario)
     all_users = db.session.scalars(query).all()
     return jsonify([user.to_dict() for user in all_users]), 200
 
 
-@app.route('/usuarios/login', methods=["POST"])
+@app.route('/api/usuarios/login', methods=["POST"])
 def login():
     credenciais = request.get_json()
 
@@ -27,66 +35,34 @@ def login():
         return jsonify({"Erro": "matrícula ou senha incorretos."}), 400
     
     headers = {
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {token.json()["access"]}"
     }
 
-    dados_usuario = requests.get(api_url + "/v2/minhas-informacoes/meus-dados/", headers=headers).json()
-    usuario = Usuario.query.filter_by(
-        Usuario.matricula == credenciais["matricula"] and Usuario.senha == hash_senha(credenciais["senha"])
-    ).one_or_none()
+    dados_usuario = requests.get(api_url + "/rh/eu/", headers=headers)
+    if dados_usuario.status_code != 200:
+        return jsonify({"Erro": "pipipipopopo"}), 400
 
+    dados_usuario = dados_usuario.json()
+    query = db.select(Usuario).where(
+        Usuario.matricula == credenciais["username"] and Usuario.senha == hash_senha(credenciais["password"])
+    )
+
+    usuario = db.session.scalars(query).one_or_none()
     if not usuario:
         db.session.add(Usuario(
-            username = dados_usuario["vinculo"]["nome"],
+            username = dados_usuario["nome_social"] or dados_usuario["nome_registro"],
             matricula = credenciais["username"],
-            senha = hash_senha(credenciais["senha"]),
+            senha = hash_senha(credenciais["password"]),
         ))
         db.session.commit()
-    
+
+    token = create_access_token(identity=credenciais["username"])
+    print(token)
+
+    return jsonify({"access": token}), 200
 
 
-
-
-
-
-
-    if token.status_code == 200:
-        query = db.select(Usuario).where(Usuario.matricula == credenciais["username"])
-
-        usuario = db.session.scalars(query).one_or_none()
-        if not usuario:
-            token.update({
-                "iat": datetime.now().timestamp(),
-                "exp": (datetime.now() + timedelta(days=7)).timestamp()
-            })
-
-            token_jwt = jwt.encode(token, os.getenv("SECRET_KEY"), algorithm='HS256')
-
-            headers = {
-                "Authorization": f"Bearer {token_jwt}"
-            }
-
-            dados_usuario = requests.get(api_url + "/v2/minhas-informacoes/meus-dados/", headers=headers)
-
-            if dados_usuario.status_code != 200:
-                return jsonify({"Erro": "matrícula ou senha incorretos."}), 400
-            
-            if dados_usuario["campus"] != 'CM':
-                return jsonify({"Erro": "Campus não autorizado."})
-            
-            usuario = Usuario(
-                username = dados_usuario.json()["vinculo"]["nome"],
-                matricula = credenciais["username"],
-                senha = hash_senha(credenciais["password"])
-            )
-
-            db.session.add(usuario)
-            db.session.commit()
-
-        return jsonify({"Sucesso": "logado com sucesso."}), 200
-
-
-@app.route('/usuarios/deletar', methods=["DELETE"])
+@app.route('/api/usuarios/deletar', methods=["DELETE"])
 def deletar_todos_usuarios():
     usuarios: list[Usuario] = db.session.scalars(db.select(Usuario)).all()
     query = db.select(Postagem)
@@ -103,22 +79,36 @@ def deletar_todos_usuarios():
     return jsonify({"Sucesso": "usuarios deletados."}), 200
 
 
-@app.route('/postagens')
+@app.route('/api/postagens')
+@jwt_required
 def postagens():
+    matricula = get_jwt_identity()
+    query = db.select(Usuario).where(Usuario.matricula == matricula)
+
+    if not db.session.scalars(query).one_or_none():
+        return jsonify({"Erro": "usuário nâo encontrado."}), 404
+    
     postagens: list[Postagem] = db.session.scalars(db.select(Postagem)).all()
     if not postagens:
         return jsonify({"Erro": "nenhum post foi encontrado."}), 404
     return jsonify([post.to_dict() for post in postagens]), 201
 
 
-@app.route('/postagens/postar', methods=['POST'])
+@app.route('/api/postagens/postar', methods=['POST'])
+@jwt_required
 def postar():
+    matricula = get_jwt_identity()
+    query = db.select(Usuario).where(Usuario.matricula == matricula)
+
+    if not db.session.scalars(query).one_or_none():
+        return jsonify({"Erro": "usuário nâo encontrado."}), 404
+    
     dados = request.get_json()
     if not dados:
         return jsonify({"erro": "dados ausentes"}), 400
 
     query = db.select(Usuario).where(
-        Usuario.matricula == dados["autor"]["username"]
+        Usuario.matricula == get_jwt_identity()
     )
     usuario = db.session.scalars(query).one_or_none()
 
@@ -126,7 +116,7 @@ def postar():
         return jsonify({"Erro": "usuario nao existe"}), 400
     
     autorizacao = model.generate_content(f"""
-        verifique msg p/ rede social escolar EM: filtre 
+        verifique msg p/ rede social escolar EM: filtre
         ofensas (pessoais, intolerância, escola, calão)
         Responda SIM ou NÃO \n\n {dados["postagem"]}
     """)
@@ -146,7 +136,7 @@ def postar():
     return jsonify({"Erro": f"A postagem foi tida como imprópria ao ambiente escolar: GEMINI -> {autorizacao.text}"}), 400
     
 
-@app.route('/postagens/deletar', methods=["DELETE"])
+@app.route('/api/postagens/deletar', methods=["DELETE"])
 def apagar_todos__os_posts():
     query = db.select(Postagem)
     all_posts: list[Postagem] = db.session.scalars(query).all()
