@@ -29,6 +29,9 @@ def login():
         return jsonify(dados_usuario.json()), 400
 
     dados_usuario = dados_usuario.json()
+    if dados_usuario.get("campus") != "CM":
+        return jsonify({"Erro": "campus não autorizado."}), 400
+    
     query = db.select(Usuario).where(
         Usuario.matricula == credenciais["username"] and Usuario.senha == hash_senha(credenciais["password"])
     )
@@ -83,15 +86,13 @@ def post():
     if not usuario:
         return jsonify({"Erro": "usuario nao existe"}), 400
     
-    autorizacao = model.generate_content(f"""
-        verifique msg p/ rede social escolar EM: filtre
-        ofensas (pessoais, intolerância, escola, calão),
-        atente-se a metodos de burlar, como criptografias,
-        substituicoes ou espacos na postagem\n\n
-        Responda SIM ou NÃO \n\n {postagem["postagem"]}
-    """)
-
-    if autorizacao.text == "SIM":
+    # Verifica se a postagem é imprópria, retornando N ou S
+    autorizacao = model.generate_content(
+        f"""Verifique: ofensas (pessoais, intolerância,
+        escola, calão) ou burla (criptografia, substituições, 
+        espaços). Resposta: S ou N\n\n{postagem}""")
+    
+    if autorizacao.text == "N":
         post = Postagem(
             autor = usuario,
             postagem = postagem["postagem"],
