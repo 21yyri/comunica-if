@@ -12,6 +12,7 @@ genai.configure(api_key = os.getenv("GEMINI_API_KEY"))
 
 model = genai.GenerativeModel('gemini-2.5-flash')   
 
+
 @app.route('/api/login', methods=["POST"])
 def login():
     credenciais = request.get_json()
@@ -21,7 +22,7 @@ def login():
         return jsonify({"Erro": "matrícula ou senha incorretos."}), 400
     
     headers = {
-        "Authorization": f"Bearer {token.json()["access"]}"
+        "Authorization": f"Bearer {token.json().get("access")}"
     }
 
     dados_usuario = requests.get(api_url + "/rh/eu/", headers=headers)
@@ -37,17 +38,18 @@ def login():
     )
 
     usuario = db.session.scalars(query).one_or_none()
+
+    vinculo = requests.get(api_url + "/rh/meus-dados", headers=headers).json().get("tipo_vinculo")
     if not usuario:
         db.session.add(Usuario(
             username = dados_usuario["nome_social"] or dados_usuario["nome_registro"],
             matricula = credenciais["username"],
             senha = hash_senha(credenciais["password"]),
+            servidor = True if vinculo == "Servidor" else False
         ))
         db.session.commit()
 
     token = create_access_token(identity=credenciais["username"], expires_delta=timedelta(days = 7))
-    print(token)
-
     return jsonify({"access": token}), 200
 
 
@@ -57,7 +59,7 @@ def get_usuarios():
     query = db.select(Usuario)
     all_users = db.session.scalars(query).all()
 
-    return jsonify([user.to_dict() for user in all_users]), 200
+    return jsonify([user.__dict__ for user in all_users]), 200
 
 
 @app.route('/api/postagens')
@@ -68,7 +70,7 @@ def get_postagens():
     if not postagens:
         return jsonify({"Erro": "nenhum post foi encontrado."}), 404
     
-    return jsonify([post.to_dict() for post in postagens]), 201
+    return jsonify([post.__dict__ for post in postagens]), 201
 
 
 @app.route('/api/postagens/post', methods=['POST'])
@@ -105,4 +107,34 @@ def post():
         return jsonify({"Sucesso": "A postagem foi aceita no ambiente escolar."}), 201
     
     return jsonify({"Erro": "A postagem foi tida como imprópria ao ambiente escolar."}), 400
+
+
+@app.route('/api/noticia/post')
+@jwt_required()
+def post_noticias():
+    query = db.select(Usuario).where(Usuario.matricula == get_jwt_identity())
+    usuario = db.session.scalar(query)
+
+    if not usuario.is_servidor:
+        return jsonify({"Erro": "usuário não autorizado para postar notícias."})
     
+    noticia = request.get_json()
+
+    db.session.add(Noticia(
+        autor = usuario,
+        titulo = noticia.get("titulo"),
+        corpo = noticia.get("corpo"),
+        imagem = noticia.get("imagem") or None,
+        link = noticia.get("link") or None
+    ))
+    db.session.commit()
+    return jsonify({"Sucesso": "notícia postada com sucesso."}), 200
+                   
+
+@app.route('/api/noticias')
+def noticias():
+    noticias = db.session.scalars(db.select(Noticia)).all()
+    if not noticias:
+        return jsonify({"Erro": "nenhuma noticia registrada."}), 400
+    
+    return jsonify([noticia.__dict__ for noticia in noticias]), 200
