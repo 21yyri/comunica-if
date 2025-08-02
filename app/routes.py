@@ -109,7 +109,7 @@ def post():
     return jsonify({"Erro": "A postagem foi tida como imprópria ao ambiente escolar."}), 400
 
 
-@app.route('/api/noticia/post')
+@app.route('/api/noticia/post', methods=["POST"])
 @jwt_required()
 def post_noticias():
     query = db.select(Usuario).where(Usuario.matricula == get_jwt_identity())
@@ -128,10 +128,12 @@ def post_noticias():
         link = noticia.get("link") or None
     ))
     db.session.commit()
+
     return jsonify({"Sucesso": "notícia postada com sucesso."}), 200
                    
 
 @app.route('/api/noticias')
+@jwt_required()
 def noticias():
     noticias = db.session.scalars(db.select(Noticia)).all()
     if not noticias:
