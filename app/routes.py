@@ -3,6 +3,7 @@ from flask import jsonify, request
 from datetime import datetime, timedelta
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 import requests, os, dotenv, google.generativeai as genai
+from base64 import b64decode
 from app.models import *
 
 dotenv.load_dotenv()
@@ -119,15 +120,15 @@ def post_noticias():
         return jsonify({"Erro": "usuário não autorizado para postar notícias."})
     
     noticia = request.get_json()
+    imagem = request.files.get("imagem")
 
     db.session.add(Noticia(
         autor = usuario,
         titulo = noticia.get("titulo"),
         corpo = noticia.get("corpo"),
-        imagem = noticia.get("imagem") or None,
-        link = noticia.get("link") or None
+        imagem = imagem or None,
+        link = noticia.get("link")
     ))
-    db.session.commit()
 
     return jsonify({"Sucesso": "notícia postada com sucesso."}), 200
                    
