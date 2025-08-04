@@ -1,6 +1,6 @@
 from app import app, db
 from flask import jsonify, request
-from datetime import datetime, timedelta
+from datetime import timedelta
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 import requests, os, dotenv, google.generativeai as genai
 from base64 import b64decode
@@ -58,9 +58,10 @@ def login():
 @jwt_required()
 def get_usuarios():
     query = db.select(Usuario)
-    all_users = db.session.scalars(query).all()
+    all_users: list[Usuario] = db.session.scalars(query).all()
 
-    return jsonify([user.__dict__ for user in all_users]), 200
+    # return jsonify([user.to_dict() for user in all_users]), 200
+    return jsonify([user.to_dict() for user in all_users]), 200
 
 
 @app.route('/api/postagens')
@@ -71,7 +72,7 @@ def get_postagens():
     if not postagens:
         return jsonify({"Erro": "nenhum post foi encontrado."}), 404
     
-    return jsonify([post.__dict__ for post in postagens]), 201
+    return jsonify([post.to_dict() for post in postagens]), 201
 
 
 @app.route('/api/postagens/post', methods=['POST'])
@@ -126,23 +127,11 @@ def post_noticias():
 
     # Criando a imagem e escrevendo a imagem
     if imagem["conteudo"]:
-        id = 0
-        while True:
-            try:
-                id += 1
-                with open(f"app/IMGs/{caminho}.png", "x") as file:
-                    pass
-                print(caminho)
-                break
-            except FileExistsError:
-                caminho = f"{caminho} ({id})"
-                print(caminho)
-
+        with open(f"app/IMGs/{caminho}.png", "x") as file:
+            pass
 
         with open(f"app/IMGs/{caminho}.png", "wb") as file:
-            print("oi")
             file.write(b64decode(imagem.get("conteudo")))
-            print("oi")
 
     db.session.add(Noticia(
         autor = usuario,
@@ -156,20 +145,6 @@ def post_noticias():
     
     return jsonify({"Sucesso": "notícia registrada."}), 200
 
-    """
-        {
-            titulo: titulo,
-            corpo: corpo,
-            setor: setor
-            imagem: {
-                caminho: caminho,
-                conteudo: conteudo
-            },
-            link: link
-        }
-    
-    """
-
 
 @app.route('/api/noticias')
 @jwt_required()
@@ -178,4 +153,4 @@ def noticias():
     if not noticias:
         return jsonify({"Erro": "nenhuma noticia registrada."}), 400
     
-    return jsonify([noticia.__dict__ for noticia in noticias]), 200
+    return jsonify({[noticia.__dict__ for noticia in noticias]}), 200

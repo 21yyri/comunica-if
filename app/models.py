@@ -38,6 +38,15 @@ class Usuario(db.Model):
         return True if senha == hash else False
 
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "matricula": self.matricula,
+            "username": self.username,
+            "servidor": self.is_servidor
+        }
+
+
     def __repr__(self) -> str:
         return f'<User {self.username}>'
 
@@ -54,6 +63,14 @@ class Postagem(db.Model):
     data: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
     id_fundo: so.Mapped[int] = so.mapped_column(sa.Integer)
 
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "matricula": self.matricula,
+            "postagem": self.postagem,
+            "data": self.data
+        }
 
     def __repr__(self) -> str:
         return f'<Postagem {self.postagem}>'
