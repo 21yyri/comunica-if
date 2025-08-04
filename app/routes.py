@@ -120,18 +120,37 @@ def post_noticias():
         return jsonify({"Erro": "usuário não autorizado para postar notícias."})
     
     noticia = request.get_json()
-    imagem = request.files.get("imagem")
+    imagem = noticia.get("imagem")
+    
+    # Criando a imagem
+    if imagem["conteudo"]:
+        with open(f"imgs/{imagem["caminho"]}.png", "wb") as file:
+            file.write(b64decode(imagem.get("conteudo")))
 
     db.session.add(Noticia(
         autor = usuario,
         titulo = noticia.get("titulo"),
         corpo = noticia.get("corpo"),
-        imagem = imagem or None,
+        imagem = imagem.get("caminho"),
         link = noticia.get("link")
     ))
+    db.session.commit()
+    
+    return jsonify({"Sucesso": "notícia registrada."}), 200
 
-    return jsonify({"Sucesso": "notícia postada com sucesso."}), 200
-                   
+    """
+        {
+            titulo: titulo,
+            corpo: corpo,
+            imagem: {
+                caminho: caminho,
+                conteudo: conteudo
+            },
+            link: link
+        }
+    
+    """
+
 
 @app.route('/api/noticias')
 @jwt_required()
