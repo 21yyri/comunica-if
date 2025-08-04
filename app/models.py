@@ -48,9 +48,11 @@ class Postagem(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
 
     autor: so.Mapped[Usuario] = so.relationship(back_populates='posts')
-    autor_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Usuario.id))
+    matricula: so.Mapped[str] = so.mapped_column(sa.ForeignKey(Usuario.matricula))
+
     postagem: so.Mapped[str] = so.mapped_column(sa.String(324), index=True)
     data: so.Mapped[datetime] = so.mapped_column(index=True, default=lambda: datetime.now(timezone.utc))
+    id_fundo: so.Mapped[int] = so.mapped_column(sa.Integer)
 
 
     def __repr__(self) -> str:
@@ -65,8 +67,9 @@ class Noticia(db.Model):
     autor: so.Mapped[Usuario] = so.relationship(back_populates='noticias')
     autor_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(Usuario.id))
 
-    titulo: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
-    corpo: so.Mapped[str] = so.mapped_column(sa.String(324), nullable=False)
+    setor: so.Mapped[str] = so.mapped_column(sa.String(32))
+    titulo: so.Mapped[str] = so.mapped_column(sa.String(64))
+    corpo: so.Mapped[str] = so.mapped_column(sa.String(324))
 
-    imagem: so.Mapped[bytes] = so.mapped_column(sa.LargeBinary, nullable=True)
+    imagem: so.Mapped[str] = so.mapped_column(sa.String(324), nullable=True)
     link: so.Mapped[str] = so.mapped_column(sa.String(324), nullable=True)

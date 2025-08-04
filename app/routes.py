@@ -98,8 +98,8 @@ def post():
     if autorizacao.text == "N":
         post = Postagem(
             autor = usuario,
-            postagem = postagem["postagem"],
-            data = datetime.now()
+            postagem = postagem.get("postagem"),
+            id_fundo = postagem.get("id_fundo")
         )
 
         db.session.add(post)
@@ -122,16 +122,34 @@ def post_noticias():
     noticia = request.get_json()
     imagem = noticia.get("imagem")
     
-    # Criando a imagem
+    caminho = imagem.get("caminho")
+
+    # Criando a imagem e escrevendo a imagem
     if imagem["conteudo"]:
-        with open(f"imgs/{imagem["caminho"]}.png", "wb") as file:
+        id = 0
+        while True:
+            try:
+                id += 1
+                with open(f"app/IMGs/{caminho}.png", "x") as file:
+                    pass
+                print(caminho)
+                break
+            except FileExistsError:
+                caminho = f"{caminho} ({id})"
+                print(caminho)
+
+
+        with open(f"app/IMGs/{caminho}.png", "wb") as file:
+            print("oi")
             file.write(b64decode(imagem.get("conteudo")))
+            print("oi")
 
     db.session.add(Noticia(
         autor = usuario,
         titulo = noticia.get("titulo"),
         corpo = noticia.get("corpo"),
-        imagem = imagem.get("caminho"),
+        setor = noticia.get("setor"),
+        imagem = caminho or None,
         link = noticia.get("link")
     ))
     db.session.commit()
@@ -142,6 +160,7 @@ def post_noticias():
         {
             titulo: titulo,
             corpo: corpo,
+            setor: setor
             imagem: {
                 caminho: caminho,
                 conteudo: conteudo
