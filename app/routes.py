@@ -153,4 +153,4 @@ def noticias():
     if not noticias:
         return jsonify({"Erro": "nenhuma noticia registrada."}), 400
     
-    return jsonify({[noticia.__dict__ for noticia in noticias]}), 200
+    return jsonify([noticia.to_dict() for noticia in noticias]), 200

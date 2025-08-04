@@ -90,3 +90,15 @@ class Noticia(db.Model):
 
     imagem: so.Mapped[str] = so.mapped_column(sa.String(324), nullable=True)
     link: so.Mapped[str] = so.mapped_column(sa.String(324), nullable=True)
+
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "autor": self.autor.matricula,
+            "setor": self.setor,
+            "titulo": self.titulo,
+            "corpo": self.corpo,
+            "imagem": self.imagem,
+            "link": self.link
+        }
