@@ -8,6 +8,7 @@ import requests
 
 suapi_url = 'https://suap.ifrn.edu.br/api'
 
+
 class LoginView(APIView):
     def post(self, request):
         username = request.data.get("username")

@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 client = genai.Client()
 
+
 class PostagemViewset(ViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -50,7 +51,7 @@ class PostagemViewset(ViewSet):
 
     @action(detail = False, methods=['post'])
     def post(self, request: Request):
-        postagem = request.POST.get("body")
+        postagem = request.data.get("body")
         usuario = Usuario.objects.get(
             username = request.user
         )

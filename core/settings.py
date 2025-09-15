@@ -58,8 +58,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'comunicaif',
-        'USER': 'yuri',
-        'PASSWORD': os.getenv("DB_PASSWORD"),
+        'USER': 'root',
+        'PASSWORD': 'labinfo',
         'HOST': 'localhost',
         'PORT': '3306'
     }

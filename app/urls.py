@@ -6,9 +6,9 @@ app_name = 'app'
 
 router = DefaultRouter()
 
-router.register(r'news', views.NoticiaViewset, basename = "news")
 router.register(r'users', views.UsuarioViewset, basename = "users")
 router.register(r'posts', views.PostagemViewset, basename = "posts")
+router.register(r'news', views.NoticiaViewset, basename = "news")
 
 urlpatterns = [
     path('', include(router.urls)),

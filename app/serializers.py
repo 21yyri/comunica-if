@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Usuario, Postagem
+from .models import Usuario, Postagem, Noticia
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
@@ -20,4 +20,14 @@ class PostagemSerializer(serializers.ModelSerializer):
             'id',
             'body',
             'data'
+        ]
+
+
+class NoticiaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Noticia
+        fields = [
+            'id', 'autor', 
+            'setor', 'titulo', 
+            'body', 'imagem'
         ]
