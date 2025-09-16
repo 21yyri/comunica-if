@@ -7,7 +7,7 @@ class Noticia(models.Model):
         verbose_name_plural: str = 'Notícias'
     
     autor: Usuario = models.ForeignKey(Usuario, on_delete = models.CASCADE)
-    setor: str = models.CharField(max_length = 2)
+    setor: str = models.CharField(max_length = 15)
 
     titulo: str = models.CharField(max_length = 64)
     body: str = models.TextField()
