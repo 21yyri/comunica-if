@@ -43,7 +43,7 @@ class NoticiaViewset(ViewSet):
             username = request.user
         )
 
-        imagem = request.FILES.get("imagem")
+        imagem = request.FILES.get("imagem") or noticia.get("imagem")
 
         link = noticia.get("link")
         if self._verify_link(link):
