@@ -44,14 +44,32 @@ class NoticiaViewset(ViewSet):
         )
 
         imagem = request.FILES.get("imagem")
+
+        link = noticia.get("link")
+        if self._verify_link(link):
+            return Response({
+                "msg": "Notícia já registrada."
+            }, status = 409)
+
         Noticia.objects.create(
             autor = usuario,
             setor = noticia.get("setor"),
             titulo = noticia.get("titulo"),
             body = noticia.get("body"),
-            imagem = imagem or None
+            imagem = imagem or None,
+            link = link,
+            data = noticia.get("data")
         ).save()
 
         return Response({
             "msg": "Notícia criada."
         }, status = 201)
+
+
+    def _verify_link(self, link: str | None) -> bool:
+        if link:
+            noticia = Noticia.objects.filter(
+                link = link
+            ).first()
+
+            return True if noticia else False

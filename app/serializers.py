@@ -29,5 +29,6 @@ class NoticiaSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'autor', 
             'setor', 'titulo', 
-            'body', 'imagem'
+            'body', 'imagem',
+            'data'
         ]
