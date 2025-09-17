@@ -9,8 +9,6 @@ from ..serializers import NoticiaSerializer
 
 
 class NoticiaViewset(ViewSet):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAdminUser]
 
 
     def list(self, request):
@@ -57,8 +55,9 @@ class NoticiaViewset(ViewSet):
             titulo = noticia.get("titulo"),
             body = noticia.get("body"),
             imagem = imagem or None,
+            imagem_url = noticia.get("imagem_url"),
+            data = noticia.get("data"),
             link = link,
-            data = noticia.get("data")
         ).save()
 
         return Response({

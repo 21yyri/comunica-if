@@ -14,6 +14,8 @@ class Noticia(models.Model):
     body: str = models.TextField()
 
     imagem: Image = models.ImageField(blank = True, upload_to = 'noticias/', max_length = 200)
+    imagem_url: str = models.URLField(blank = True)
+    
     link: str = models.CharField(max_length = 220, default = None)
 
     data: datetime = models.DateTimeField(auto_now = True)

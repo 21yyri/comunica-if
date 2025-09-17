@@ -30,5 +30,5 @@ class NoticiaSerializer(serializers.ModelSerializer):
             'id', 'autor', 
             'setor', 'titulo', 
             'body', 'imagem',
-            'data', 'imagem'
+            'data', 'imagem_url'
         ]
