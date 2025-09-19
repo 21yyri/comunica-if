@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ViewSet
 from rest_framework.decorators import action
-from rest_framework.authentication import TokenAuthentication
+from ..authorization import BearerTokenAuth
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from ..models import Usuario, Noticia

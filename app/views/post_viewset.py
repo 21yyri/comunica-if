@@ -3,20 +3,20 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.request import Request
-from rest_framework.authentication import TokenAuthentication
+from ..authorization import BearerTokenAuth
 from rest_framework.permissions import IsAuthenticated
 from ..models import Usuario, Postagem
 from ..serializers import PostagemSerializer
-from google import genai
 from google.genai.errors import ServerError
 from dotenv import load_dotenv
+from google import genai
 
 load_dotenv()
 client = genai.Client()
 
 
 class PostagemViewset(ViewSet):
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [BearerTokenAuth]
     permission_classes = [IsAuthenticated]
 
 
@@ -37,7 +37,11 @@ class PostagemViewset(ViewSet):
     def destroy(self, request, pk):
         postagem = get_object_or_404(Postagem, pk = pk)
         
-        if not postagem.autor == request.user:
+        usuario = Usuario.objects.get(
+            pk = postagem.autor_id
+        ).__str__()
+
+        if not usuario == request.user.username:
             return Response({
                 "msg": "Não é possível deletar postagem."
             }, 403)
