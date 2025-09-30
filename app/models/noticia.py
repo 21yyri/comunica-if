@@ -17,5 +17,6 @@ class Noticia(models.Model):
     imagem_url: str = models.URLField(blank = True)
     
     link: str = models.CharField(max_length = 220, default = None)
-
     data: datetime = models.DateTimeField(auto_now = True)
+
+    disponivel: bool = models.BooleanField(default = True)

@@ -7,5 +7,9 @@ class Usuario(User):
         verbose_name: str = 'Usuário'
 
 
+    def is_authorized(self):
+        return self.is_staff
+    
+
     def __str__(self) -> str:
         return self.username

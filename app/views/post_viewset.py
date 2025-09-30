@@ -21,7 +21,7 @@ class PostagemViewset(ViewSet):
 
 
     def list(self, request):
-        postagem = Postagem.objects.all()
+        postagem = Postagem.objects.filter(disponivel = True)
         serializer = PostagemSerializer(postagem, many = True)
         
         return Response(serializer.data, status = 200)
@@ -62,7 +62,7 @@ class PostagemViewset(ViewSet):
 
         # Validação do conteúdo da postagem
         try:
-            autorizacao = self._verify_post(postagem)
+            autorizacao = self._verify_post(usuario, postagem)
         except ServerError:
             return Response({
                 "msg": "Autorização interminada por excesso de requisições ao servidor."
@@ -86,8 +86,12 @@ class PostagemViewset(ViewSet):
         }, status = 201)
 
 
-    def _verify_post(self, postagem) -> bool:
+    def _verify_post(self, usuario, postagem) -> bool:
         """Retorna o resultado da validação do conteúdo da postagem."""
+
+        if usuario.is_authorized():
+            return True
+
         auth = client.models.generate_content(
             model = "gemini-2.5-flash",
             contents = f"""

@@ -13,6 +13,7 @@ class Postagem(models.Model):
     imagem: Image = models.ImageField(blank = True, upload_to = 'postagens/')
 
     data: datetime = models.DateTimeField(default = datetime.now())
+    disponivel: bool = models.BooleanField(default = True)
 
     def __str__(self) -> str:
         return f'[{self.data}] {self.autor}: {self.body}'

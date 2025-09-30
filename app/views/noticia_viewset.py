@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.viewsets import ViewSet
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from ..authorization import BearerTokenAuth
 from rest_framework.permissions import IsAdminUser
@@ -9,10 +10,11 @@ from ..serializers import NoticiaSerializer
 
 
 class NoticiaViewset(ViewSet):
-
+    permission_classes = [IsAdminUser]
+    authentication_classes = [BearerTokenAuth]
 
     def list(self, request):
-        noticias = Noticia.objects.all()
+        noticias = Noticia.objects.filter(disponivel = True)
         serializer = NoticiaSerializer(noticias, many = True)
 
         return Response(serializer.data, status = 200)
@@ -24,6 +26,13 @@ class NoticiaViewset(ViewSet):
 
         return Response(serializer.data, status = 200)
     
+    @action(detail = False, methods=["GET"], url_path = "setor/<str:setor>")
+    def get_by_setor(self, request, setor):
+        noticias = Noticia.objects.filter(setor = setor)
+        serializer = NoticiaSerializer(noticias, many = True)
+
+        return Response(serializer.data, status = 200)
+
 
     def destroy(self, request, pk):
         noticia = get_object_or_404(Noticia, pk = pk)
@@ -37,6 +46,7 @@ class NoticiaViewset(ViewSet):
     @action(detail = False, methods=['post'])
     def post(self, request):
         noticia = request.data
+        print(request.user)
         usuario = Usuario.objects.get(
             username = request.user
         )
@@ -72,3 +82,13 @@ class NoticiaViewset(ViewSet):
             ).first()
 
             return True if noticia else False
+
+
+class NoticiaporSetor(APIView):
+    def get(self, request, setor):
+        noticias = Noticia.objects.filter(
+            setor = setor
+        )
+        serializer = NoticiaSerializer(noticias, many = True)
+
+        return Response(serializer.data, status = 200)
