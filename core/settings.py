@@ -58,8 +58,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'comunicaif',
-        'USER': 'yuri',
-        'PASSWORD': '18102007',
+        'USER': '',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306'
     }
@@ -99,3 +99,4 @@ REST_FRAMEWORK = {
         'app.authorization.BearerTokenAuth',
     ],
 }
+
