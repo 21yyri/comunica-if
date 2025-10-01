@@ -9,7 +9,7 @@ class Carrossel(APIView):
     noticias = Noticia.objects.filter(
         data__gte = datetime.now() - timedelta(hours = 12),
         disponivel = True
-    ).order_by('data')
+    ).order_by('?')
 
     postagens = Postagem.objects.filter(
         data__gte = datetime.now() - timedelta(hours = 12), 
