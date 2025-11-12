@@ -50,8 +50,8 @@ REST_FRAMEWORK = {
 }
 
 CRONJOBS = [
-    ('30 * * * *', 'app.cron.get_cnn_news'),
-    ('30 * * * *', 'app.cron.get_metropoles_news'),
+    ('*/3 * * * *', 'app.cron.get_cnn_news'),
+    ('*/3 * * * *', 'app.cron.get_metropoles_news'),
 ]
 
 MIDDLEWARE = [
@@ -92,11 +92,18 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'comunicaif',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': '18102007',
         'HOST': 'localhost',
         'PORT': '3306'
     }
 }
+
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

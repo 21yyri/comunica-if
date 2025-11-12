@@ -33,7 +33,7 @@ class CNNScraper:
 
         token = requests.post(f"{COMUNICA_URL}/login/", json = {
             "username": "20241174010007",
-            "password": "",
+            "password": "Und3rT4l3kk",
         }).json().get("Token")
 
         for news in feed.entries:
@@ -45,12 +45,13 @@ class CNNScraper:
                 "titulo": news.title,
                 "sumario": news.summary + '.',
                 "link": news.link,
+                "disponivel": True
             }
 
             requests.post(
-                f"{COMUNICA_URL}/news/post/",
+                f"{COMUNICA_URL}/noticia/",
                 json = noticia, headers = {
-                    "Authorization": f"Bearer {token}"
+                    "Authorization": f"Token {token}"
                 }
             )
 

@@ -13,20 +13,27 @@ class Usuario(User):
 
 
 class Postagem(models.Model):
-    id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    class Meta:
+        ordering = ['-data']
+    
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
     corpo = models.TextField(max_length=300)
 
-    imagem = models.ImageField(upload_to="imagens/postagens", null=True)
-    data = models.DateField(auto_now=True)
+    imagem = models.URLField(null=True)
+    data = models.DateTimeField(auto_now=True)
 
 
 class Noticia(models.Model):
-    id_usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    class Meta:
+        ordering = ['-data']
+
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
 
     titulo = models.TextField(max_length=150)
     sumario = models.TextField(max_length=320)
 
     link = models.URLField(null=True)
-    data = models.DateField(auto_now=True)
+    imagem = models.URLField(null=True)
+    data = models.DateTimeField(auto_now=True)
 
     disponivel = models.BooleanField(default=True)

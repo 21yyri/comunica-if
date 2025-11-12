@@ -4,11 +4,10 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from ..serializers import PostagemSerializer
-from google import genai
-
 from ..models import Usuario, Postagem
 
-CLIENT = genai.Client()
+from ..services.authorization import validar_postagem
+from ..services.image_upload import upload
 
 class Postagens(APIView):
     permission_classes = [IsAuthenticated]
@@ -16,7 +15,6 @@ class Postagens(APIView):
 
     def get(self, request, pk=None):
         postagem = get_object_or_404(Postagem, id=pk)
-        print(postagem.id)
         serializer = PostagemSerializer(postagem)
 
         return Response(serializer.data, status=200)
@@ -26,7 +24,10 @@ class Postagens(APIView):
         corpo, imagem = request.data.values()
         usuario = Usuario.objects.get(username=request.user)
 
-        if not self._validar_postagem(usuario, corpo):
+        if imagem:
+            imagem = upload(imagem)
+
+        if not validar_postagem(usuario, corpo):
             return Response({
                 "msg": "Erro ao validar a postagem."
             }, status=400)
@@ -59,27 +60,12 @@ class Postagens(APIView):
         }, 200)
 
 
-    def _validar_postagem(self, usuario, postagem):
-        if usuario.is_authorized:
-            return True
-        
-        validacao = CLIENT.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=f"""
-                Verifique: ofensas (pessoais, intolerância, 
-                escola, calão) ou burla (criptografia, substituições, 
-                espaços). Resposta: S ou N\n\n{postagem}
-            """
-        ).text
-
-        return validacao == "N"
-    
-
     def _criar_postagem(self, usuario, corpo, imagem):
         postagem = Postagem.objects.create(
-            username_usuario=usuario,
+            usuario=usuario,
             corpo=corpo,
-            imagem=imagem
+            imagem=imagem or None
         )
 
         return postagem
+ 
