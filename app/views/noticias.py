@@ -37,6 +37,15 @@ class Noticias(APIView):
         return Response({
             "msg": "Notícia criada com sucesso."
         }, status=201)
+    
+
+    def delete(self, request, pk=None):
+        noticia = get_object_or_404(Noticia, pk=pk)
+        noticia.delete()
+
+        return Response({
+            "msg": "Notícia deletada com sucesso."
+        }, 200)
 
     
     def _criar_noticia(self, usuario, noticia, imagem):
