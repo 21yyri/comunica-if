@@ -32,6 +32,5 @@ No endpoint `/api/login/`, o usuário deve fazer uma requisição POST contendo 
 
 Muitas das views para usuário, postagem e notícia seguem os padrões REST e não precisam ser detalhadas aqui.
 
-## Contribuintes
-Leo Silva, orientador do projeto.<br>
-Samuel Pedrosa, desenvolvedor front-end do projeto.
+## Colaboradores
+Leo Silva, orientador do projeto.
