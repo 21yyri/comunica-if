@@ -1,7 +1,6 @@
 from celery import Celery
-import os
-
 from datetime import timedelta
+import os
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 

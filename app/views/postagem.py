@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from ..serializers import PostagemSerializer
 from ..models import Usuario, Postagem
 
-from ..services.authorization import validar_postagem
+from ..services.post_authorization import validar_postagem
 from ..services.image_upload import upload
 
 class Postagens(APIView):

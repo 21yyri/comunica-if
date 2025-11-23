@@ -1,7 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 
-class Usuario(User):
+class Usuario(AbstractUser):
     is_servidor = models.BooleanField(default=False)
 
     @property

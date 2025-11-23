@@ -1,0 +1,37 @@
+services:
+  mysql:
+    image: mysql:8.0.44-debian
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+  
+    environment:
+      MYSQL_ROOT_PASSWORD: 18102007
+      MYSQL_DATABASE: comunicaif
+  
+  app:
+    build: ./
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    ports:
+      - 8080:8080
+
+    environment:
+      - GEMINI_API_KEY=
+      - CLOUD_NAME=
+      - API_SECRET=
+      - API_KEY=
+
+      - DB_HOST=mysql
+      - DB_NAME=comunicaif
+      - DB_USER=root
+      - DB_PASSWORD=18102007
+      - DB_PORT=3306
+    
+    command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8080"

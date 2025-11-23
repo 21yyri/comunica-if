@@ -33,14 +33,15 @@ class Login(APIView):
             }, status=401)
         
         try:
-            self._create_user(username, password, token)
+            user = self._create_user(username, password, token)
         except:
             return Response({
                 "msg": "Campus não autorizado."
             }, status=403)
         
+        token, _ = Token.objects.get_or_create(user=user)
         return Response({
-            "msg": "Usuário registrado com sucesso."
+            "Token": token.key
         }, status=201)
 
 
@@ -63,7 +64,7 @@ class Login(APIView):
         if user_data["campus"] != "CM":
             raise Exception("Campus não autorizado.")
 
-        Usuario.objects.create_user(
+        return Usuario.objects.create_user(
             username=username,
             password=password,
             first_name=user_data["nome_social"] or user_data["primeiro_nome"],
