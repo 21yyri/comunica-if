@@ -9,7 +9,7 @@ class Usuario(AbstractUser):
         return self.is_servidor
 
     def __str__(self):
-        return f'{self.username}: {self.first_name} {self.last_name}'
+        return self.username
 
 
 class Postagem(models.Model):
@@ -30,9 +30,10 @@ class Noticia(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
 
     titulo = models.TextField(max_length=150)
-    sumario = models.TextField(max_length=320)
+    sumario = models.TextField(max_length=500)
 
-    link = models.URLField(null=True)
+    link = models.URLField(null=True, unique=True, max_length=256)
+
     imagem = models.URLField(null=True)
     data = models.DateTimeField(auto_now=True)
 

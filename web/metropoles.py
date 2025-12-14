@@ -1,5 +1,12 @@
 import feedparser, requests
 from bs4 import BeautifulSoup
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    filename=".log", filemode="w",
+    format="%(asctime)s - %(message)s"
+)
 
 COMUNICA_URL = "http://localhost:8000/api"
 METROPOLES_URL = "https://metropoleonline.com.br/rss/latest-posts"
@@ -20,15 +27,19 @@ class MetropolesScraper:
                 "titulo": news.title,
                 "sumario": news.summary + '.',
                 "link": news.link,
+                "imagem": self._get_imagem(news.link),
                 "disponivel": True
             }
 
-            requests.post(
+            result = requests.post(
                 f"{COMUNICA_URL}/noticia/", 
                 json = noticia, headers = {
                     "Authorization": f"Token {token}"
                 }
             )
+
+            if result != 201:
+                logger.error(f"STATUS CODE {result.status_code} PARA {news.link}.")
             
 
     def _get_imagem(self, url: str) -> str:
