@@ -62,6 +62,7 @@ class Login(APIView):
 
         user_data = response.json()
         if user_data["campus"] != "CM":
+            print(user_data["campus"])
             raise Exception("Campus não autorizado.")
 
         return Usuario.objects.create_user(

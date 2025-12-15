@@ -1,4 +1,4 @@
-from .postagem import Postagens
+from .postagens import Postagens
 from .login import Login
 from .noticias import Noticias
 from .carrossel import Carrossel

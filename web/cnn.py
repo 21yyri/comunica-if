@@ -32,7 +32,7 @@ class CNNScraper:
                 "link": news.link,
                 "imagem": self._get_imagem(news.link),
                 "disponivel": True,
-                "automatizada": True
+                "automatizado": True
             }
 
             result = requests.post(
@@ -42,7 +42,7 @@ class CNNScraper:
                 }
             )
 
-            if result != 201:
+            if result.status_code != 201:
                 logger.error(f"STATUS CODE {result.status_code} PARA {news.link}.")
 
 
@@ -53,3 +53,7 @@ class CNNScraper:
 
         imagem = soup.select('img.flex.size-full.object-cover')[2]
         return imagem.get("src")
+
+
+if __name__ == '__main__':
+    CNNScraper().scrape()

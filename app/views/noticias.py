@@ -59,7 +59,7 @@ class Noticias(APIView):
             link=noticia["link"],
             disponivel=noticia["disponivel"],
             imagem=imagem,
-            automatizada=noticia["automatizada"],
+            automatizado=noticia["automatizado"],
         )
 
 
@@ -81,7 +81,7 @@ class Noticias(APIView):
         if not noticia:
             return False
         
-        if noticia.automatizada == True:
+        if noticia.automatizado == True:
             return True
 
         return False

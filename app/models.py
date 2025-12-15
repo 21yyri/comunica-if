@@ -34,8 +34,8 @@ class Noticia(models.Model):
 
     link = models.URLField(null=True, max_length=256)
 
-    imagem = models.URLField(null=True)
+    imagem = models.URLField(null=True, max_length=256)
     data = models.DateTimeField(auto_now=True)
 
     disponivel = models.BooleanField(default=True)
-    automatizada = models.BooleanField(default=False)
+    automatizado = models.BooleanField(default=False)

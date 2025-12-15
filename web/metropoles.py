@@ -31,7 +31,7 @@ class MetropolesScraper:
                 "link": news.link,
                 "imagem": self._get_imagem(news.link),
                 "disponivel": True,
-                "automatizada": True
+                "automatizado": True
             }
 
             result = requests.post(
@@ -41,7 +41,7 @@ class MetropolesScraper:
                 }
             )
 
-            if result != 201:
+            if result.status_code != 201:
                 logger.error(f"STATUS CODE {result.status_code} PARA {news.link}.")
             
 
@@ -49,4 +49,9 @@ class MetropolesScraper:
         html = requests.get(url).text
         soup = BeautifulSoup(html, 'html.parser')
 
-        return soup.select('img.img-fluid.center-image')[0].get("src")
+        imagem = soup.select_one("img.img-fluid.center-image")
+        return imagem.get("src")
+
+
+if __name__ == '__main__':
+    MetropolesScraper().scrape()

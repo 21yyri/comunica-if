@@ -1,13 +1,15 @@
 import requests
 from cnn import CNNScraper
 from metropoles import MetropolesScraper
+from g1 import G1Scraper
 
 # CRONJOB
-# SCHEDULE : 30 14 * * * $HOME/Projects/comunica-if/.venv/bin/python3 $HOME/Projects/comunica-if/web/scraper.py
+# 0 */8 * * * $HOME/Projects/comunica-if/.venv/bin/python3 $HOME/Projects/comunica-if/web/scraper.py
 
 def scrape():
     MetropolesScraper().scrape()
     CNNScraper().scrape()
+    G1Scraper().scrape()
 
 
 if __name__ == "__main__":
