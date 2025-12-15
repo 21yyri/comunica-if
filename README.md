@@ -46,5 +46,8 @@ No endpoint `/api/login/`, o usuário deve fazer uma requisição POST contendo 
 - `/api/postagem/` -> POST: recebe um `corpo` com texto de até 80 caracteres e um argumento `imagem`. Pode retornar **400** caso o conteúdo da postagem não seja validado pela IA, **201** caso a postagem seja válida e criada, ou **503** se o servidor da IA esteja sobrecarregado.
 - ``/api/noticia/`` -> POST:  recebe um corpo com chaves que designam titulo, sumário e como opcionais: url de imagem e link da notícia. Deve retornar **409** caso uma notícia externa já esteja registrada ou **201** caso tenha sido registrada com sucesso.
 
+## Problemas conhecidos
+- Ao atualizar senhas do suap, ocorrem transtornos com o processo de login caso o usuário já esteja registrado.
+
 ## Colaboradores
 Leo Silva, orientador do projeto.
