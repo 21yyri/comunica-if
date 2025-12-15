@@ -1,6 +1,6 @@
 import feedparser, requests
 from bs4 import BeautifulSoup
-import logging
+import logging, dotenv, os
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -12,14 +12,16 @@ COMUNICA_URL = "http://localhost:8000/api"
 METROPOLES_URL = "https://metropoleonline.com.br/rss/latest-posts"
 
 class MetropolesScraper:
+    dotenv.load_dotenv()
+
     def scrape(self):
         feed = feedparser.parse(METROPOLES_URL)
         if feed.status != 200:
             raise requests.exceptions.ConnectionError()
 
         token = requests.post(f"{COMUNICA_URL}/login/", json = {
-            "username": "20241174010007",
-            "password": "Und3rT4l3kk",
+            "username": os.getenv("MATRICULA"),
+            "password": os.getenv("SENHA"),
         }).json().get("Token")
 
         for news in feed.entries:
@@ -28,7 +30,8 @@ class MetropolesScraper:
                 "sumario": news.summary + '.',
                 "link": news.link,
                 "imagem": self._get_imagem(news.link),
-                "disponivel": True
+                "disponivel": True,
+                "automatizada": True
             }
 
             result = requests.post(

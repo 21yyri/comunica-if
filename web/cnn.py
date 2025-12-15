@@ -1,6 +1,6 @@
 import feedparser, requests
 from bs4 import BeautifulSoup
-import logging 
+import logging, dotenv, os
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -12,6 +12,8 @@ COMUNICA_URL = "http://127.0.0.1:8000/api"
 RSS_URL = "https://admin.cnnbrasil.com.br/feed/"
 
 class CNNScraper:
+    dotenv.load_dotenv()
+
     def scrape(self):
         feed = feedparser.parse(RSS_URL)
 
@@ -19,8 +21,8 @@ class CNNScraper:
             raise requests.exceptions.HTTPError()
 
         token = requests.post(f"{COMUNICA_URL}/login/", json = {
-            "username": "20241174010007",
-            "password": "Und3rT4l3kk",
+            "username": os.getenv("MATRICULA"),
+            "password": os.getenv("SENHA"),
         }).json().get("Token")
 
         for news in feed.entries:
@@ -29,7 +31,8 @@ class CNNScraper:
                 "sumario": news.summary + '.',
                 "link": news.link,
                 "imagem": self._get_imagem(news.link),
-                "disponivel": True
+                "disponivel": True,
+                "automatizada": True
             }
 
             result = requests.post(

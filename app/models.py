@@ -32,9 +32,10 @@ class Noticia(models.Model):
     titulo = models.TextField(max_length=150)
     sumario = models.TextField(max_length=500)
 
-    link = models.URLField(null=True, unique=True, max_length=256)
+    link = models.URLField(null=True, max_length=256)
 
     imagem = models.URLField(null=True)
     data = models.DateTimeField(auto_now=True)
 
     disponivel = models.BooleanField(default=True)
+    automatizada = models.BooleanField(default=False)

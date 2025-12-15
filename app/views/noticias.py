@@ -52,29 +52,36 @@ class Noticias(APIView):
 
     
     def _criar_noticia(self, usuario, noticia, imagem) -> Noticia:
-        try:
-            Noticia.objects.create(
-                usuario=usuario,
-                titulo=noticia["titulo"],
-                sumario=noticia["sumario"],
-                link=noticia["link"],
-                disponivel=noticia["disponivel"],
-                imagem=imagem,
-            )
-        except:
-            pass # Erro esquisito onde diz que a imagem é muiti longa pra a coluna (???)
+        Noticia.objects.create(
+            usuario=usuario,
+            titulo=noticia["titulo"],
+            sumario=noticia["sumario"],
+            link=noticia["link"],
+            disponivel=noticia["disponivel"],
+            imagem=imagem,
+            automatizada=noticia["automatizada"],
+        )
 
-    
 
     def get_imagem(self, request) -> str:
-        if request.data["imagem"]:
-            return request.data["imagem"]
-        return upload(request.FILES["imagem"])
+        arquivo = request.FILES.get("imagem", '')
+        if arquivo:
+            return upload(arquivo)
+        
+        return request.data["imagem"]
 
 
-    def _noticia_existe(self, url: str) -> bool:
-        try:
-            Noticia.objects.get(link=url)
-        except:
+    def _noticia_existe(self, link: str) -> bool:
+        if not link: # Evita dar como existente caso não tenha link
             return False
-        return True
+        
+        # Verifica se há outra notícia sob esse link
+        # E se ela foi inserida por script ou não
+        noticia = Noticia.objects.filter(link=link).first()
+        if not noticia:
+            return False
+        
+        if noticia.automatizada == True:
+            return True
+
+        return False
