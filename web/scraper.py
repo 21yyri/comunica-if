@@ -2,6 +2,9 @@ import requests
 from cnn import CNNScraper
 from metropoles import MetropolesScraper
 
+# CRONJOB
+# SCHEDULE : 30 14 * * * $HOME/Projects/comunica-if/.venv/bin/python3 $HOME/Projects/comunica-if/web/scraper.py
+
 def scrape():
     MetropolesScraper().scrape()
     CNNScraper().scrape()
